@@ -1,0 +1,10 @@
+name = grinlegumes
+description = GRIN data for legumes being served from LIS.
+core = 7.x
+files[] = grinlegumes.module
+
+package = lis_germplasm 
+;dependencies[] = 
+;dependencies[] = 
+;files[] = 
+;configure = 

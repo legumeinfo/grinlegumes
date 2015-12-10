@@ -1,0 +1,264 @@
+<?php
+// $Id$
+
+//   grinlegumes
+
+// Sudhansu Dash
+// 2015 Nov 30
+
+
+/**
+ * Implements hook_menu().
+ */
+
+function grinlegumes_menu() {
+  $items = array();
+
+  
+	  #$items['germplasm/grin/chickpea/query'] = array( //this creates a URL
+  $items['germplasm/grin/grinlegumes'] = array( //this creates a URL
+    'title' => 'GRIN Germplasm Data at LIS', //page title
+    'description' => 'A form to acces USDA GRIN germplasm accession data for legumes stored at LIS.',
+    'page callback' => grinlegumes_page_callback, //this is the function that will be called when the page is accessed.  for a form, use drupal_get_form
+    //'page arguments' => array('grin_acc_query_form'), //form name here // may be not reqd if page callback fn() doesn't need it.
+    'access callback' => TRUE,
+    
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+
+
+function grinlegumes_theme() {
+	##function chickpeagrindata_theme() {
+  return array(
+    'grinlegumes_page_template' => array(  // this array name to be used in theme()
+		##'chickpeagrindata_page_template' => array(  // this array name to be used in theme()
+      'template' => 'grinlegumes_page', // template file grinlegumes_page.tpl.php
+      'variables' => array('examples' => NULL, 'grin_url' => NULL, 'grin_taxon' => NULL, 'acc_no' => NULL, 'html_content' => NULL),
+        ),
+    );
+}
+
+/**
+ * Implements page callback.
+ */
+
+function grinlegumes_page_callback() {
+	##function chickpeagrindata_page_callback() {
+  
+  //Get the grin_acc_no from URL
+  $acc_no = $_GET['grin_acc_no'];
+  //$acc_no = '289619';
+
+  //<<<<<<<<<<Processing accession number
+  
+  preg_match('/(?<prefix>[aA-zZ]*)\s*(?<number>\d+)/',$acc_no,$matches);
+  //    /(?<prefix>\w+) (?<number>\d+)/  #works for complete pattern
+  //   /(?<prefix>\w*)\s*(?<number>\d+)/   ## this should work for PI 1234 or jus 1234
+  $acc_no_prefix = $matches[prefix];  
+  $acc_no_num = $matches[number]; 
+  $acc_no_full = $acc_no_prefix." ".$acc_no_num;
+
+  if ($acc_no_prefix) {
+    $acc_no = $acc_no_full;
+  } else {
+  $acc_no = $acc_no_num;
+  }
+
+
+  //$acc_no_array = explode(' ', $acc_no2, 2);
+  //$acc_no_prefix = $acc_no_array[0];
+  //$acc_no_num = $acc_no_array[1];
+
+
+
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+  $genus = $_GET['grin_taxon'];
+  
+  //select database specific example
+  $examples = select_grinlegumes_examples();
+	  ##$examples = select_chickpeagrindata_examples();
+  
+  //Get drupal module path (for providing path to PDO sqlite, hence portability)
+  $this_module_path = drupal_get_path(module, chickpeagrindata);
+  
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  //Trying from postgres db
+  //----------------------------------------------
+/*
+  $query = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
+  $query->fields('lged',array('accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
+  $query->orderBy('method_name');//ORDER BY created
+  $query->condition('accession_number',$acc_no,'=');
+  $query->condition('taxon',$genus.'%','LIKE');
+  
+  //accession_prefix | accession_number | observation_value | descriptor_name | method_name
+  //accession_number,descriptor_name,observation_value,method_name
+  
+ // $result_psql = $query->execute();
+  
+ // $row_count_result_psql = $result_psql->rowCount();
+*/
+  //--------------joiningn both tables-----------
+
+
+  $query2 = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
+  $query2->innerjoin('lis_germplasm.grin_accession','ga','lged.accession_prefix||\' \'||lged.accession_number = ga.accenumb');
+  $query2->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
+  $query2->fields('ga',array('accenumb','origcty','latitude','longitude','elevation'));//SELECT the fields from table
+  $query2->orderBy('lged.method_name');//ORDER BY created
+  $query2->orderBy('lged.descriptor_name','ASC');//ORDER BY created
+  //$query2->condition('lged.accession_number',$acc_no,'=');
+  if ($acc_no_prefix){
+    $query2->condition('ga.accenumb',$acc_no,'=');
+  } else {
+    $query2->condition('lged.accession_number',$acc_no,'=');
+  }
+  //$query2->condition('lged.accession_number',$acc_no,'=');
+  //$query2->condition('lged.accession_number',$acc_no,'=');
+  $query2->condition('lged.taxon',$genus.'%','LIKE');
+
+  //Query for passport data:
+  
+  $result_psql2 = $query2->execute();
+  $row_count_result_psql2 = $result_psql2->rowCount();
+  
+  //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+  //try
+    //{
+        //open the database
+  //    $db = new PDO("sqlite:$this_module_path/chickpea_grin_eval_data.sqlite.db");
+      //$db = new PDO('sqlite:sites/all/modules/grin/chickpeagrindata/chickpea_grin_eval_data.sqlite.db');
+      //$result = $db->query("SELECT taxon  FROM peanut_grin_eval_data WHERE accession_number=289619 LIMIT 1");
+    //  $result = $db->query("SELECT accession_number,descriptor_name,observation_value,method_name FROM chickpea_grin_eval_data WHERE accession_number = $acc_no ORDER BY method_name;");
+
+       //<<<<<<< trying database query into html table and in a variable
+    if (!$row_count_result_psql2) { 
+    //if (!$row_count_result_psql) { 
+    //if (!$result_psql) { 
+    //if (!$result) { 
+      $html_content = "This acc no for genus, <i>".$genus."</i> has no data, please check for correctness!";
+    } else {
+	//echo $result->fetchColumn();
+          //echo $result->fetch(PDO::FETCH_NUM);
+          // IMP NOTE: Row count of PDO sqlite select is not dependable (google)
+        $html_content = 
+	   "<div>"
+	   ."Your Query: ".$row->accession_prefix.' '.$row->accession_number."<br/>"
+	   ."Country of Origin: ".$row->origcity."<br/>"
+	   ."</div>"
+	   ."<table>"
+           ."<tr>"
+           ."<td>"."ACCESSION NO.<br/>(GRIN)"."</td>"."<td>"."TRAIT<br/>(descriptor_name)"."</td>"."<td>"."observation_value"."</td>"."<td>"."EVALUATION STUDY<br/>(method_name)"."</td>"."<td>"."Taxon"."</td>"
+           ."</tr>";
+        
+        foreach($result_psql2 as $row)
+        //foreach($result_psql as $row)
+        //foreach($result as $row)
+        {
+          $html_content = $html_content .= 
+            "<tr>"
+            ."<td>".$row->accession_prefix.' '.$row->accession_number."</td>"
+            //."<td>".$row['accession_number']."</td>"
+            ."<td>".$row->descriptor_name."</td>"
+            //."<td>".$row['descriptor_name']."</td>"
+            ."<td>".$row->observation_value."</td>"
+	      //."<td>".$row->['observation_value']."</td>"
+            ."<td>".$row->method_name."</td>"
+            //."<td>".$row['method_name']."</td>"
+            ."<td>".$row->taxon."</td>"
+            ."</tr>";
+          
+        }
+        
+        $html_content .= "</table>";
+      //>>>>>>>>
+ 
+     
+      }
+        // close the database connection
+      $db = NULL;
+    //echo "HELLO WORLD".$result['accession_number'];
+    //}  //end-try
+
+    /*
+    catch(PDOException $e)
+    {
+    print 'Exception : '.$e->getMessage();
+    }
+*/
+
+  
+  // array name in hook_theme() that specifies page template file.
+  return theme ('grinlegumes_page_template', array('examples' => $examples, 'grin_url' => $grin_url, 'grin_taxon' => $genus, 'acc_no' => $acc_no, 'html_content' => $html_content, 'acc_no2' => $acc_no2, 'acc_no_prefix' => $acc_no_prefix, 'acc_no_num' => $acc_no_num)); 
+	    ##return theme ('chickpeagrindata_page_template', array('examples' => $examples, 'grin_url' => $grin_url, 'acc_no' => $acc_no, 'html_content' => $html_content)); 
+
+}
+
+
+
+
+/*                 PI 374113, PI 489777      */
+
+
+
+
+/**
+ * Select example based on http_host (peanutbase or LIS).
+ */
+
+function select_grinlegumes_examples() {
+	##function select_chickpeagrindata_examples() {
+  
+  //Find corresponding example html for peanutbase or LIS
+  //Passed on using $examples via hook_theme() and theme()
+  
+    $examples = <<<EXAMPLES
+        <div id="examples"  style="font-size:80%;">
+        <b>Examples. </b>
+	Chickpea:
+        <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>374113</a>,&nbsp
+        <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>489777</a>;&nbsp 
+        Peanut:&nbsp;  
+	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>236</a>,&nbsp 
+	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>289619</a>,&nbsp 
+	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>565448</a> 
+	.
+        </div>
+EXAMPLES;
+
+  return $examples;
+}
+
+//  SCRATCH PAD
+//=============
+
+/*
+ 
+  select accession_number,descriptor_name,observation_value,method_name from peanut_grin_eval_data where accession_number = 289619 order by method_name;
+  
+sqlite> select count(accession_number) from  peanut_grin_eval_data where method_name like '%CORE%';
+30929
+sqlite> select count(accession_number) from  peanut_grin_eval_data;                       212276
+sqlite> select distinct method_name from  peanut_grin_eval_data where method_name like '%CORE%';
+PEANUT.MINI.CORE.ICRISAT
+PEANUT.CORE.COLLECTION.SELECTION
+PEANUT.CORE.FATTY.ACID.1997
+PEANUT.CORE.US
+PEANUT.IMAGE.MINICORE.2012
+PEANUT.MINI.CORE
+PEANUT.IMAGE.ICRISAT.MINICORE.2011
+
+ 
+ 
+*/
