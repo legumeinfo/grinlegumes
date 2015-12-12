@@ -19,9 +19,7 @@ function grinlegumes_menu() {
     'page callback' => grinlegumes_page_callback, //this is the function that will be called when the page is accessed.  for a form, use drupal_get_form
     //'page arguments' => array('grin_acc_query_form'), //form name here // may be not reqd if page callback fn() doesn't need it.
     'access callback' => TRUE,
-    
   );
-
   return $items;
 }
 
@@ -38,6 +36,7 @@ function grinlegumes_theme() {
         ),
     );
 }
+
 
 /**
  * Implements page callback.
@@ -65,110 +64,136 @@ function grinlegumes_page_callback() {
   $genus = $_GET['grin_taxon'];
   
   //Example acc nos.
-  $examples = select_grinlegumes_examples();
-  
+  $examples = <<<EXAMPLES
+    <div id="examples"  style="font-size:80%;">
+    <b>Examples. </b>
+    Chickpea:
+    <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 374113</a>,&nbsp
+    <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 489777</a>;&nbsp 
+    Peanut:&nbsp;  
+    <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>Grif 236</a>,&nbsp 
+    <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 289619</a>,&nbsp 
+    <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 565448</a> 
+    .
+    </div>
+EXAMPLES;
+ 
   //Query database:
   //Using Drupal database API db_select
-  $query2 = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
-  $query2->innerjoin('lis_germplasm.grin_accession','ga','lged.accession_prefix||\' \'||lged.accession_number = ga.accenumb');
-  $query2->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
-  $query2->fields('ga',array('accenumb','origcty','latitude','longitude','elevation'));//SELECT the fields from table
-  $query2->orderBy('lged.method_name');//first by the evaluation study
-  $query2->orderBy('lged.descriptor_name','ASC');//next by descriptor name
+  $query = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
+  $query->innerjoin('lis_germplasm.grin_accession','ga','lged.accession_prefix||\' \'||lged.accession_number = ga.accenumb');
+  $query->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
+  $query->fields('ga',array('accenumb','origcty','latitude','longitude','elevation','cropname','acqdate','colldate','collsite','spauthor','avail','instcode','duplsite','donornumb','storage','accename','history'));//SELECT the fields from table
+  $query->orderBy('lged.method_name');//first by the evaluation study
+  $query->orderBy('lged.descriptor_name','ASC');//next by descriptor name
   //If prefixed, query ga-field with full acc else query jus no in lged-field 
   if ($acc_no_prefix){
-    $query2->condition('ga.accenumb',$acc_no,'=');
+    $query->condition('ga.accenumb',$acc_no,'=');
   } else {
-    $query2->condition('lged.accession_number',$acc_no,'=');
+    $query->condition('lged.accession_number',$acc_no,'=');
   }
-  $query2->condition('lged.taxon',$genus.'%','LIKE'); //now, searching by genus is not useful
+  $query->condition('lged.taxon',$genus.'%','LIKE'); //now, searching by genus is not useful
 
   //Result
-  $result_psql2 = $query2->execute();
-  $row_count_result_psql2 = $result_psql2->rowCount();
+  $result = $query->execute();
+  $row_count_result = $result->rowCount();
   
   //Result to a php array
-  $result2_array = array();
-  if ($row_count_result_psql2) {
-    foreach($result_psql2 as $row) {
-      $result2_array[] = $row;
+  $result_array = array();
+  if ($row_count_result) {
+    foreach($result as $row) {
+      $result_array[] = $row;
     }
   } 
 
-    //database query into html table and in a variable
-    if (!$row_count_result_psql2) { 
-      $html_content = "This acc no for genus, <i>".$genus."</i> has no data, please check for correctness!";
+    //database query into html and in a variable
+    if (!$row_count_result) { 
+      $html_content = "This acc no has no data, please check for correctness!";
     } else {
-        $html_content = 
-	   "<div>"
-	   ."Your Query: ".$result2_array[0]->accession_prefix.' '.$result2_array[0]->accession_number."<br/>"
-	   ."Country of Origin: ".$result2_array[0]->origcty."<br/>"
-	   ."</div>"
-	   ."<table>"
-           ."<tr>"
-           ."<td>"."ACCESSION NO.<br/>(GRIN)"."</td>"."<td>"."TRAIT<br/>(descriptor_name)"."</td>"."<td>"."observation_value"."</td>"."<td>"."EVALUATION STUDY<br/>(method_name)"."</td>"."<td>"."Taxon"."</td>"
-           ."</tr>";
-        
-       foreach($result2_array as $row) {
-          $html_content = $html_content .= 
-            "<tr>"
-            ."<td>".$row->accession_prefix.' '.$row->accession_number."</td>"
-            //."<td>".$row['accession_number']."</td>"
-            ."<td>".$row->descriptor_name."</td>"
-            //."<td>".$row['descriptor_name']."</td>"
-            ."<td>".$row->observation_value."</td>"
-	      //."<td>".$row->['observation_value']."</td>"
-            ."<td>".$row->method_name."</td>"
-            //."<td>".$row['method_name']."</td>"
-            ."<td>".$row->taxon."</td>"
-            ."</tr>";
-          
-        } //foreach
-        
-        $html_content .= "</table>";
-     
-      }  //if-else
+      //Passport data:   (Link to grinconnect/query?grin_acc_no=PI+489777#)
+      $html_content_passport = 
+	 "<div>"
+	 ."<fieldset>"
+	 ."<legend>Available passport data for <b>".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."</b></legend>"
+	 ."<br/>"
+	 ."<b>Accession number:</b>&nbsp;".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."&nbsp;"
+	 ."(<a href=\"/grinconnect/query?grin_acc_no=".$result_array[0]->accession_prefix."+".$result_array[0]->accession_number."\">link to GRIN</a>)"."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Taxon:</b>&nbsp;".unknown_if_empty($result_array[0]->taxon)."&nbsp;(<b>Author:</b>&nbsp".unknown_if_empty($result_array[0]->spauthor).")"."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Crop:</b>&nbsp;".unknown_if_empty($result_array[0]->cropname)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Accession name:</b>&nbsp;".unknown_if_empty($result_array[0]->accename)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<b>Country of origin:</b>&nbsp;".unknown_if_empty($result_array[0]->origcty)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Site of collection:</b>&nbsp;".unknown_if_empty($result_array[0]->collsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Latitude:</b>&nbsp;".unknown_if_empty($result_array[0]->latitude)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Longitude:</b>&nbsp".unknown_if_empty($result_array[0]->longitude)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Elevation:</b>&nbsp".unknown_if_empty($result_array[0]->elevation)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<b>History:</b>&nbsp".unknown_if_empty($result_array[0]->history)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<b>Date of acquisition:</b>&nbsp".unknown_if_empty($result_array[0]->acqdate)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Date of collection:</b>&nbsp".unknown_if_empty($result_array[0]->colldate)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<b>Institution code/Available at:</b>&nbsp".unknown_if_empty($result_array[0]->instcode)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Duplication/Backup site:</b>&nbsp".unknown_if_empty($result_array[0]->duplsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Availability:</b>&nbsp".unknown_if_empty($result_array[0]->avail)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<a href=\"/lis_gis/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>"." (if GIS data available)"
+	 ."</fieldset>"
+	 ."</div>";
+
+      //Evaluation data:
+      $html_content_eval = 
+	 "<fieldset>"
+	 ."<legend>Available trait evaluation data for <b>".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."</b></legend>"
+	 ."<br/>"
+	 ."<table>"
+	 ."<tr>"
+	 ."<td>"."<b>TRAIT</b><br/>(descriptor_name)"."</td>"."<td>"."<b>VALUE</b><br/>(observation_value)"."</td>"."<td>"."<b>EVALUATION STUDY</b><br/>(method_name)"."</td>"
+	 //."<td>"."ACCESSION NO.<br/>(GRIN)"."</td>"."<td>"."TRAIT<br/>(descriptor_name)"."</td>"."<td>"."observation_value"."</td>"."<td>"."EVALUATION STUDY<br/>(method_name)"."</td>"."<td>"."Taxon"."</td>"
+	 ."</tr>";
+      
+      foreach($result_array as $row) {
+	$html_content_eval = $html_content_eval .= 
+	  "<tr>"
+	  //."<td>".$row->accession_prefix.' '.$row->accession_number."</td>"
+	  //."<td>".$row['accession_number']."</td>"
+	  ."<td>".$row->descriptor_name."</td>"
+	  //."<td>".$row['descriptor_name']."</td>"
+	  ."<td>".$row->observation_value."</td>"
+	    //."<td>".$row->['observation_value']."</td>"
+	  ."<td>".$row->method_name."</td>"
+	  //."<td>".$row['method_name']."</td>"
+	  //."<td>".$row->taxon."</td>"
+	  ."</tr>";
+	
+      } //foreach
+      
+      $html_content_eval .= "</table>";
+      $html_content_eval .= "</fieldset>";
+      $html_content = $html_content_passport.$html_content_eval;
+    }  //if-else
 
   
   // array name in hook_theme() that specifies page template file.
-  return theme ('grinlegumes_page_template', array('examples' => $examples, 'grin_url' => $grin_url, 'grin_taxon' => $genus, 'acc_no' => $acc_no, 'html_content' => $html_content, 'acc_no2' => $acc_no2, 'acc_no_prefix' => $acc_no_prefix, 'acc_no_num' => $acc_no_num)); 
+  return theme ('grinlegumes_page_template', array('examples' => $examples, 'grin_url' => $grin_url, 'grin_taxon' => $genus, 'acc_no' => $acc_no, 'html_content' => $html_content, /*'acc_no2' => $acc_no2,*/ 'acc_no_prefix' => $acc_no_prefix, 'acc_no_num' => $acc_no_num)); 
 
 }
-
-
-
-
-/*                 PI 374113, PI 489777      */
-
-
-
 
 /**
- * Select example based on http_host (peanutbase or LIS).
- */
+* Test if empty and then print
+*/
 
-function select_grinlegumes_examples() {
-	##function select_chickpeagrindata_examples() {
-  
-  //Find corresponding example html for peanutbase or LIS
-  //Passed on using $examples via hook_theme() and theme()
-  
-    $examples = <<<EXAMPLES
-        <div id="examples"  style="font-size:80%;">
-        <b>Examples. </b>
-	Chickpea:
-        <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 374113</a>,&nbsp
-        <a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 489777</a>;&nbsp 
-        Peanut:&nbsp;  
-	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>Grif 236</a>,&nbsp 
-	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 289619</a>,&nbsp 
-	<a href="#" onclick='document.getElementById("grin_acc_no").value=this.innerHTML;'>PI 565448</a> 
-	.
-        </div>
-EXAMPLES;
+function unknown_if_empty ($xyz) {
+  if ($xyz) {
+    return $xyz;
+  } else {
+    return "Not known";
+  }//if
+} //fn
 
-  return $examples;
-}
+
+
+
 
 //  SCRATCH PAD
 //=============
