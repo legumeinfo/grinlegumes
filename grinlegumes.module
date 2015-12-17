@@ -83,7 +83,7 @@ EXAMPLES;
   $query = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
   $query->innerjoin('lis_germplasm.grin_accession','ga','lged.accession_prefix||\' \'||lged.accession_number = ga.accenumb');
   $query->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
-  $query->fields('ga',array('accenumb','origcty','latitude','longitude','elevation','cropname','acqdate','colldate','collsite','spauthor','avail','instcode','duplsite','donornumb','storage','accename','history'));//SELECT the fields from table
+  $query->fields('ga',array('accenumb','origcty','latitude','longitude','latdec','longdec','elevation','cropname','acqdate','colldate','collsite','spauthor','avail','instcode','duplsite','donornumb','storage','accename','history'));//SELECT the fields from table
   $query->orderBy('lged.method_name');//first by the evaluation study
   $query->orderBy('lged.descriptor_name','ASC');//next by descriptor name
   //If prefixed, query ga-field with full acc else query jus no in lged-field 
@@ -124,8 +124,8 @@ EXAMPLES;
 	 ."<br/>"
 	 ."<b>Country of origin:</b>&nbsp;".unknown_if_empty($result_array[0]->origcty)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Site of collection:</b>&nbsp;".unknown_if_empty($result_array[0]->collsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Latitude:</b>&nbsp;".unknown_if_empty($result_array[0]->latitude)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Longitude:</b>&nbsp".unknown_if_empty($result_array[0]->longitude)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Latitude:</b>&nbsp;".unknown_if_empty($result_array[0]->latdec)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Longitude:</b>&nbsp".unknown_if_empty($result_array[0]->longdec)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Elevation:</b>&nbsp".unknown_if_empty($result_array[0]->elevation)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<br/>"
 	 ."<b>History:</b>&nbsp".unknown_if_empty($result_array[0]->history)."&nbsp;&nbsp;&nbsp;&nbsp;"
@@ -136,9 +136,16 @@ EXAMPLES;
 	 ."<b>Institution code/Available at:</b>&nbsp".unknown_if_empty($result_array[0]->instcode)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Duplication/Backup site:</b>&nbsp".unknown_if_empty($result_array[0]->duplsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Availability:</b>&nbsp".unknown_if_empty($result_array[0]->avail)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<br/>"
-	 ."<a href=\"/lis_gis/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>"." (if GIS data available)"
-	 ."</fieldset>"
+	 ."<br/>";
+
+         //if lat-long available provide link to map
+         if ($result_array[0]->latdec != 0 OR $result_array[0]->longdec != 0) {
+	 $html_content_passport .="<a href=\"/lis_gis/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>";
+	 } else { 
+	 $html_content_passport .="No map data is available for this accession.";
+	 }
+
+	 $html_content_passport .="</fieldset>"  // close fieldset and div
 	 ."</div>";
 
       //Evaluation data:
