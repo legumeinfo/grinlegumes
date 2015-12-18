@@ -32,7 +32,7 @@ function grinlegumes_theme() {
   return array(
     'grinlegumes_page_template' => array(  // this array name to be used in theme()
       'template' => 'grinlegumes_page', // template file grinlegumes_page.tpl.php
-      'variables' => array('examples' => NULL, 'grin_url' => NULL, 'grin_taxon' => NULL, 'acc_no' => NULL, 'html_content' => NULL),
+      'variables' => array('examples' => NULL, 'grin_taxon' => NULL, 'acc_no' => NULL, 'html_content' => NULL),
         ),
     );
 }
@@ -142,7 +142,7 @@ EXAMPLES;
          if ($result_array[0]->latdec != 0 OR $result_array[0]->longdec != 0) {
 	 $html_content_passport .="<a href=\"/lis_gis/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>";
 	 } else { 
-	 $html_content_passport .="No map data is available for this accession.";
+	 $html_content_passport .="(No map data is available for this accession.)";
 	 }
 
 	 $html_content_passport .="</fieldset>"  // close fieldset and div
@@ -177,12 +177,14 @@ EXAMPLES;
       
       $html_content_eval .= "</table>";
       $html_content_eval .= "</fieldset>";
+
       $html_content = $html_content_passport.$html_content_eval;
+
     }  //if-else
 
   
   // array name in hook_theme() that specifies page template file.
-  return theme ('grinlegumes_page_template', array('examples' => $examples, 'grin_url' => $grin_url, 'grin_taxon' => $genus, 'acc_no' => $acc_no, 'html_content' => $html_content, /*'acc_no2' => $acc_no2,*/ 'acc_no_prefix' => $acc_no_prefix, 'acc_no_num' => $acc_no_num)); 
+  return theme ('grinlegumes_page_template', array('examples' => $examples, 'grin_taxon' => $genus, 'acc_no' => $acc_no, 'html_content' => $html_content, 'acc_no_prefix' => $acc_no_prefix, 'acc_no_num' => $acc_no_num)); 
 
 }
 

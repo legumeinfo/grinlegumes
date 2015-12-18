@@ -31,7 +31,7 @@
 </form>
 </div>
 <hr/>
-<!-- Message  -->
+<!-- Message for debugging -->
 <!--
 <div>
   <hr/>
@@ -51,6 +51,4 @@
   ?>
 </div>
 
-
-<!-- SCRATCH PAD  -->
 
