@@ -82,7 +82,7 @@ EXAMPLES;
   //Using Drupal database API db_select
   $query = db_select('lis_germplasm.legumes_grin_evaluation_data', 'lged');
   $query->innerjoin('lis_germplasm.grin_accession','ga','lged.accession_prefix||\' \'||lged.accession_number = ga.accenumb');
-  $query->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon'));//SELECT the fields from table
+  $query->fields('lged',array('accession_prefix','accession_number','descriptor_name','observation_value','method_name','taxon','accession_comment'));//SELECT the fields from table
   $query->fields('ga',array('accenumb','origcty','latitude','longitude','latdec','longdec','elevation','cropname','acqdate','colldate','collsite','spauthor','avail','instcode','duplsite','donornumb','storage','accename','history'));//SELECT the fields from table
   $query->orderBy('lged.method_name');//first by the evaluation study
   $query->orderBy('lged.descriptor_name','ASC');//next by descriptor name
@@ -125,17 +125,19 @@ EXAMPLES;
 	 ."<b>Country of origin:</b>&nbsp;".unknown_if_empty($result_array[0]->origcty)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Site of collection:</b>&nbsp;".unknown_if_empty($result_array[0]->collsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<b>Latitude:</b>&nbsp;".unknown_if_empty($result_array[0]->latdec)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Longitude:</b>&nbsp".unknown_if_empty($result_array[0]->longdec)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Elevation:</b>&nbsp".unknown_if_empty($result_array[0]->elevation)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Longitude:</b>&nbsp;".unknown_if_empty($result_array[0]->longdec)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Elevation:</b>&nbsp;".unknown_if_empty($result_array[0]->elevation)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<br/>"
-	 ."<b>History:</b>&nbsp".unknown_if_empty($result_array[0]->history)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>History:</b>&nbsp;".unknown_if_empty($result_array[0]->history)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<br/>"
-	 ."<b>Date of acquisition:</b>&nbsp".unknown_if_empty($result_array[0]->acqdate)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Date of collection:</b>&nbsp".unknown_if_empty($result_array[0]->colldate)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 .blank_if_empty($result_array[0]->accession_comment,"<b>Comments:</b>&nbsp;")
 	 ."<br/>"
-	 ."<b>Institution code/Available at:</b>&nbsp".unknown_if_empty($result_array[0]->instcode)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Duplication/Backup site:</b>&nbsp".unknown_if_empty($result_array[0]->duplsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
-	 ."<b>Availability:</b>&nbsp".unknown_if_empty($result_array[0]->avail)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Date of acquisition:</b>&nbsp;".unknown_if_empty($result_array[0]->acqdate)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Date of collection:</b>&nbsp;".unknown_if_empty($result_array[0]->colldate)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<br/>"
+	 ."<b>Institution code/Available at:</b>&nbsp;".unknown_if_empty($result_array[0]->instcode)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Duplication/Backup site:</b>&nbsp;".unknown_if_empty($result_array[0]->duplsite)."&nbsp;&nbsp;&nbsp;&nbsp;"
+	 ."<b>Availability:</b>&nbsp;".unknown_if_empty($result_array[0]->avail)."&nbsp;&nbsp;&nbsp;&nbsp;"
 	 ."<br/>";
 
          //if lat-long available provide link to map
@@ -189,14 +191,28 @@ EXAMPLES;
 }
 
 /**
-* Test if empty and then print
+* Print Unknown if empty
 */
 
+  //If $xyz has no values, print unknown
 function unknown_if_empty ($xyz) {
   if ($xyz) {
     return $xyz;
   } else {
     return "Not known";
+  }//if
+} //fn
+
+/**
+* Blank if empty (print nothing at all
+*/
+
+  //if $xyz has a value, print the $specific_label then $xyz, else return null
+function blank_if_empty ($xyz,$specific_label) {
+  if ($xyz) {
+    return $specific_label."&nbsp;".$xyz;
+  } else {
+    return "";
   }//if
 } //fn
 
