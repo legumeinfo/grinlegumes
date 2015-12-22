@@ -19,7 +19,11 @@
    <select  id="grin_taxon"  name="grin_taxon"  value="<?php print $_GET['grin_taxon']; ?>" >
      <option value="">Any</option>
      <option value="Arachis">Arachis</option>
+     <option value="Cajanus">Cajanus</option>
      <option value="Cicer">Cicer</option>
+     <option value="Medicago">Medicago</option>
+     <option value="Phaseolus">Phaseolus</option>
+     <option value="Vigna">Vigna</option>
    </select> 
 
 
