@@ -142,7 +142,7 @@ EXAMPLES;
 
          //if lat-long available provide link to map
          if ($result_array[0]->latdec != 0 OR $result_array[0]->longdec != 0) {
-	 $html_content_passport .="<a href=\"/lis_gis/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>";
+	 $html_content_passport .="<a href=\"/germplasm/map/#?accessionIds=".$result_array[0]->accession_prefix.' '.$result_array[0]->accession_number."\" "." target='_blank'>"."<b>See it in a map</b></a>";
 	 } else { 
 	 $html_content_passport .="(No map data is available for this accession.)";
 	 }
