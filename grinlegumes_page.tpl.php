@@ -1,6 +1,6 @@
 <!-- Title and guide text  -->
 <div>
-  <h1>GRIN Legumes: Germplasn Data from GRIN for Legumes</h1>
+  <h1>GRIN Legumes: Germplasm Data from GRIN for Legumes</h1>
   <span>Search for trait evaluation data with a GRIN accession no for the available species.</span>
   <span style="font-size: 75%">(Based on the descriptor data downloaded from GRIN.)</span>
   <hr/>
