@@ -18,12 +18,13 @@
    Genus (optional): 
    <select  id="grin_taxon"  name="grin_taxon"  value="<?php print $_GET['grin_taxon']; ?>" >
      <option value="">Any</option>
-     <option value="Arachis">Arachis</option>
-     <option value="Cajanus">Cajanus</option>
-     <option value="Cicer">Cicer</option>
-     <option value="Medicago">Medicago</option>
-     <option value="Phaseolus">Phaseolus</option>
-     <option value="Vigna">Vigna</option>
+     <option value="Arachis">Arachis (peanut)</option>
+     <option value="Cajanus">Cajanus (pigeonpea)</option>
+     <option value="Cicer">Cicer (chickpea)</option>
+     <option value="Medicago">Medicago (alfalfa)</option>
+     <option value="Phaseolus">Phaseolus (common bean)</option>
+     <option value="Vicia">Vicia (fababean)</option>
+     <option value="Vigna">Vigna (adzuki bean,moongbean,cowpea)</option>
    </select> 
 
 
