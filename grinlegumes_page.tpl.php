@@ -21,6 +21,7 @@
      <option value="Arachis">Arachis (peanut)</option>
      <option value="Cajanus">Cajanus (pigeonpea)</option>
      <option value="Cicer">Cicer (chickpea)</option>
+     <option value="Glycine">Glycine (soybean)</option>
      <option value="Lathyrus">Lathyrus</option>
      <option value="Lens">Lens (lentil)</option>
      <option value="Medicago">Medicago (alfalfa)</option>
