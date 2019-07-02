@@ -12,7 +12,7 @@
   <br/>
   Enter a GRIN Accession Number and Genus (optional): <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
   
-  <input type="text" id="grin_acc_no" name="grin_acc_no" required value="<?php print $_GET['grin_acc_no']; ?>" >
+  <input type="text" id="grin_acc_no" name="grin_acc_no" required pattern="[A-z 0-9]+"value="<?php print $_GET['grin_acc_no']; ?>" >
   &nbsp;&nbsp;&nbsp;&nbsp;
   
    Genus (optional): 
